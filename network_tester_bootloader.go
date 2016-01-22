@@ -13,21 +13,33 @@ var errorLog, warningLog, infoLog, debugLog *log.Logger
 
 func main() {
     firmware := flag.String("firmware", "null", "Path to the firmware.")
-    device := flag.String("device", "null", "Path to the device on which we should commmunicate")
-    verbose := flag.Bool("verbose", false, "Whether to show verbose/debug log or not.")
+    device   := flag.String("device", "null", "Path to the device on which we should commmunicate")
+    verbose  := flag.Bool("verbose", false, "Whether to show verbose/debug log or not.")
 
     flag.Parse()
 
     errorLog   = log.New(os.Stdout, "ERROR: ",   log.Ltime)
     warningLog = log.New(os.Stdout, "WARNING: ", log.Ltime)
     infoLog    = log.New(os.Stdout, "INFO: ",    log.Ltime)
-    debugLog   = log.New(os.Stdout, "DEBUG: ",   log.Ltime)
 
-    debugLog.Println("Arguments:")
-    debugLog.Println("   Firmware Path:", *firmware)
-    debugLog.Println("   Device Path:", *device)
-    debugLog.Println("   Verbose:", *verbose)
-    // TODO : Loop through all the found devices and upload firmware
+    success := true
+
+    if *verbose {
+        debugLog   = log.New(os.Stdout, "DEBUG: ",   log.Ltime)
+
+        debugLog.Println("Arguments:")
+        debugLog.Println("   Firmware Path:", *firmware)
+        debugLog.Println("   Device Path:", *device)
+        debugLog.Println("   Verbose:", *verbose)
+    }
+
+    // TODO : Loop through all the found devices and upload firmware, update
+    //        success if there is a failure
+
+    if !success {
+        infoLog.Println("Program Usage:")
+        flag.PrintDefaults()
+    }
 }
 
 //------------------------------------------------------------------------------
