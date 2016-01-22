@@ -7,7 +7,7 @@ import (
   "os"
 
   "github.com/tarm/serial"
-  //"github.com/Omegaice/go-xmodem/xmodem"
+  "github.com/Omegaice/go-xmodem/xmodem"
 )
 
 var errorLog, warningLog, infoLog, debugLog *log.Logger
@@ -34,12 +34,12 @@ func main() {
         debugLog.Println("   Verbose:", *verbose)
     }
 
-    if *device != "nil" && *firmware != "nil" {
+    if success && *device != "nil" && *firmware != "nil" {
         success = upload_firmware(*device, *firmware)
     } else { success = false }
 
     if !success {
-        infoLog.Println("Program Usage:")
+        infoLog.Println("Program Usage: Must have Device and Firmware to run..")
         flag.PrintDefaults()
     }
 }
@@ -55,17 +55,19 @@ func upload_firmware(dev_path, firmware_path string) bool {
 
     infoLog.Println("Opening", dev_path)
 
-    c := &serial.Config { Name: dev_path, Baud: 115200 }
+    // TODO : Upload firmware to multiple devices in goroutines simultaneously
 
-    s, err := serial.OpenPort(c)
+    config := &serial.Config { Name: dev_path, Baud: 115200 }
+
+    port, err := serial.OpenPort(config)
     if err != nil {
         errorLog.Println(err)
     }
 
-    n, err := s.Write([]byte("test"))
-    if n!=2|| err != nil {
-        errorLog.Println(err)
-    }
+    infoLog.Println("Sending packets now...")
+    xmodem.ModemSend(port, []byte("test"))
+
+    debugLog.Println("Done sending packets")
 
     return true
 }
