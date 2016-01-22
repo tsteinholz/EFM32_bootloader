@@ -7,13 +7,14 @@ import (
   "os"
 
   //"github.com/Omegaice/go-xmodem/xmodem"
+  //"github.com/tarm/serial"
 )
 
 var errorLog, warningLog, infoLog, debugLog *log.Logger
 
 func main() {
-    firmware := flag.String("firmware", "null", "Path to the firmware.")
-    device   := flag.String("device", "null", "Path to the device on which we should commmunicate")
+    firmware := flag.String("firmware", "nil", "Path to the firmware.")
+    device   := flag.String("device", "nil", "Path to the device on which we should commmunicate")
     verbose  := flag.Bool("verbose", false, "Whether to show verbose/debug log or not.")
 
     flag.Parse()
@@ -35,6 +36,9 @@ func main() {
 
     // TODO : Loop through all the found devices and upload firmware, update
     //        success if there is a failure
+    if *device != "nil" && *firmware != "nil" {
+        upload_firmware(*device, *firmware)
+    } else { success = false }
 
     if !success {
         infoLog.Println("Program Usage:")
