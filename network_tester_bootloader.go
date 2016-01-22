@@ -6,8 +6,8 @@ import (
   //"io"
   "os"
 
+  "github.com/tarm/serial"
   //"github.com/Omegaice/go-xmodem/xmodem"
-  //"github.com/tarm/serial"
 )
 
 var errorLog, warningLog, infoLog, debugLog *log.Logger
@@ -34,10 +34,8 @@ func main() {
         debugLog.Println("   Verbose:", *verbose)
     }
 
-    // TODO : Loop through all the found devices and upload firmware, update
-    //        success if there is a failure
     if *device != "nil" && *firmware != "nil" {
-        upload_firmware(*device, *firmware)
+        success = upload_firmware(*device, *firmware)
     } else { success = false }
 
     if !success {
@@ -53,6 +51,21 @@ func main() {
 // Param firmware_path: The location on disk of the firmware that is to be
 //                      installed.
 //------------------------------------------------------------------------------
-func upload_firmware(dev_path, firmware_path string) {
-    // TODO : Implement fucntion
+func upload_firmware(dev_path, firmware_path string) bool {
+
+    infoLog.Println("Opening", dev_path)
+
+    c := &serial.Config { Name: dev_path, Baud: 115200 }
+
+    s, err := serial.OpenPort(c)
+    if err != nil {
+        errorLog.Println(err)
+    }
+
+    n, err := s.Write([]byte("test"))
+    if n!=2|| err != nil {
+        errorLog.Println(err)
+    }
+
+    return true
 }
