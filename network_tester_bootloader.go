@@ -65,20 +65,16 @@ func upload_firmware(dev_path, firmware_path string) bool {
     config := &serial.Config { Name: dev_path, Baud: 115200 }
 
     port, err := serial.OpenPort(config)
-    if err != nil { errorLog.Println(err) }
+    check(err)
 
     debug_log("Sending xmodem request to serial")
     _, err = port.Write([]byte("U"))
-    if err != nil { errorLog.Println(err) }
-
-    err = port.Flush()
-    if err != nil { errorLog.Println(err) }
+    check(err)
+    check(port.Flush())
 
     _, err = port.Write([]byte("u"))
-    if err != nil { errorLog.Println(err) }
-
-    err = port.Flush()
-    if err != nil { errorLog.Println(err) }
+    check(err)
+    check(port.Flush())
 
     debug_log("Done sending xmodem request to serial")
 
@@ -97,4 +93,16 @@ func upload_firmware(dev_path, firmware_path string) bool {
 //------------------------------------------------------------------------------
 func debug_log(text string) {
     if (debug) { debugLog.Println(text) }
+}
+
+//------------------------------------------------------------------------------
+// Purpose: Quick error checking to fix the excess amount of error checking we
+// need to do
+//
+// Param err: The error we are checking
+//------------------------------------------------------------------------------
+func check(err error) {
+    if err != nil {
+        panic(err)
+    }
 }
