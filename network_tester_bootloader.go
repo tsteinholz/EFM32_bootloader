@@ -11,12 +11,12 @@ import (
 )
 
 var errorLog, warningLog, infoLog, debugLog *log.Logger
+var debug bool
 
 func main() {
     firmware := flag.String("firmware", "nil", "Path to the firmware.")
     device   := flag.String("device", "nil", "Path to the device on which we should commmunicate")
     verbose  := flag.Bool("verbose", false, "Whether to show verbose/debug log or not.")
-
     flag.Parse()
 
     errorLog   = log.New(os.Stdout, "ERROR: ",   log.Ltime)
@@ -32,14 +32,19 @@ func main() {
         debugLog.Println("   Firmware Path:", *firmware)
         debugLog.Println("   Device Path:", *device)
         debugLog.Println("   Verbose:", *verbose)
+
+        debug = true
     }
 
     if success && *device != "nil" && *firmware != "nil" {
         success = upload_firmware(*device, *firmware)
-    } else { success = false }
+    } else {
+        success = false
+        errorLog.Println("Must have device and firmware arguments to run..")
+    }
 
     if !success {
-        infoLog.Println("Program Usage: Must have Device and Firmware to run..")
+        infoLog.Println("Program Usage:")
         flag.PrintDefaults()
     }
 }
@@ -60,14 +65,36 @@ func upload_firmware(dev_path, firmware_path string) bool {
     config := &serial.Config { Name: dev_path, Baud: 115200 }
 
     port, err := serial.OpenPort(config)
-    if err != nil {
-        errorLog.Println(err)
-    }
+    if err != nil { errorLog.Println(err) }
 
-    infoLog.Println("Sending packets now...")
+    debug_log("Sending xmodem request to serial")
+    _, err = port.Write([]byte("U"))
+    if err != nil { errorLog.Println(err) }
+
+    err = port.Flush()
+    if err != nil { errorLog.Println(err) }
+
+    _, err = port.Write([]byte("u"))
+    if err != nil { errorLog.Println(err) }
+
+    err = port.Flush()
+    if err != nil { errorLog.Println(err) }
+
+    debug_log("Done sending xmodem request to serial")
+
+    infoLog.Println("Starting XMODEM transfer for", dev_path)
     xmodem.ModemSend(port, []byte("test"))
-
-    debugLog.Println("Done sending packets")
-
+    // TODO : send binary data instead of "test"
+    // TODO : add timeout
     return true
+}
+
+//------------------------------------------------------------------------------
+// Purpose: To handle the debug log and only publish the log when the user
+// specifies a need for it.
+//
+// Param text: The text that should output
+//------------------------------------------------------------------------------
+func debug_log(text string) {
+    if (debug) { debugLog.Println(text) }
 }
