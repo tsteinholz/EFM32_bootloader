@@ -3,7 +3,7 @@ package main
 import (
   "flag"
   "log"
-  //"io"
+  "io/ioutil"
   "os"
 
   "github.com/tarm/serial"
@@ -58,6 +58,9 @@ func main() {
 //------------------------------------------------------------------------------
 func upload_firmware(dev_path, firmware_path string) bool {
 
+    data, err := ioutil.ReadFile(firmware_path)
+    check(err)
+
     infoLog.Println("Opening", dev_path)
 
     // TODO : Upload firmware to multiple devices in goroutines simultaneously
@@ -79,8 +82,8 @@ func upload_firmware(dev_path, firmware_path string) bool {
     debug_log("Done sending xmodem request to serial")
 
     infoLog.Println("Starting XMODEM transfer for", dev_path)
-    xmodem.ModemSend(port, []byte("test"))
-    // TODO : send binary data instead of "test"
+    err = xmodem.ModemSend(port, data)
+    check(err)
     // TODO : add timeout
     return true
 }
