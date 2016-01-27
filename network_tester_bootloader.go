@@ -17,13 +17,13 @@ var debug bool
 
 func main() {
 	firmware := flag.String("firmware", "nil", "Path to the firmware.")
-	device := flag.String("device", "nil", "Path to the device on which we should commmunicate")
-	verbose := flag.Bool("verbose", false, "Whether to show verbose/debug log or not.")
+	device   := flag.String("device", "nil", "Path to the device on which we should commmunicate")
+	verbose  := flag.Bool("verbose", false, "Whether to show verbose/debug log or not.")
 	flag.Parse()
 
-	errorLog = log.New(os.Stdout, "ERROR: ", log.Ltime)
+	errorLog   = log.New(os.Stdout, "ERROR: ",   log.Ltime)
 	warningLog = log.New(os.Stdout, "WARNING: ", log.Ltime)
-	infoLog = log.New(os.Stdout, "INFO: ", log.Ltime)
+	infoLog    = log.New(os.Stdout, "INFO: ",    log.Ltime)
 
 	success := true
 
@@ -131,13 +131,12 @@ func check(err error) {
 // Param port: The serial port that we should utilize
 //------------------------------------------------------------------------------
 func verify_write(port *serial.Port) {
-	debugLog.Println("start verify")
-	read_buff := make([]byte, 5)
-	n := 1
+	//debugLog.Println("start verify")
 	var err error
-	debugLog.Println(read_buff)
+	n, read_buff := 1, make([]byte, 5)
+	//debugLog.Println(read_buff)
 	for n > 0 && err != io.EOF {
-		debugLog.Println("verify loop")
+		//debugLog.Println("verify loop")
 		n, err = port.Read(read_buff)
 		//check(err)
 	}
