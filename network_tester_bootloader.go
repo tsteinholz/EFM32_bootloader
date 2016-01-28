@@ -53,15 +53,18 @@ func main() {
 //                      installed.
 //------------------------------------------------------------------------------
 func upload_firmware(dev_path, firmware_path string) bool {
+	debugLog.Println("Reading binary file")
 	data, err := ioutil.ReadFile(firmware_path)
-	check(err)
 
+	check(err)
 	infoLog.Println("Opening", dev_path)
 
 	// TODO : Upload firmware to multiple devices in goroutines simultaneously
 
-	config := &serial.Config{Name: dev_path, Baud: 115200, ReadTimeout: time.Second * 5}
+	// TODO : Come to a final decision on baud rate
+	config := &serial.Config{Name: dev_path, Baud: 115200/*9600*/, ReadTimeout: time.Second * 5}
 
+	debugLog.Println("Opening serial port")
 	port, err := serial.OpenPort(config)
 	check(err)
 
@@ -83,14 +86,11 @@ func upload_firmware(dev_path, firmware_path string) bool {
 
 	debug_log("Done sending xmodem request to serial")
 
+	start_time := time.Now()
 	infoLog.Println("Starting XMODEM transfer for", dev_path)
 	check(xmodem.ModemSend(port, data))
-	// TODO : add timeout
-	infoLog.Println("Testing for feedback")
-	read_buff := make([]byte, 10)
-	_, err = port.Read(read_buff)
-	check(err)
-	infoLog.Println(read_buff)
+	verify_write(port)
+	infoLog.Println("Finished XMODEM transfer for", dev_path, "in", time.Since(start_time), "seconds")
 	return true
 }
 
