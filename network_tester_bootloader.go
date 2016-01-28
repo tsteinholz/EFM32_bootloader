@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/Omegaice/go-xmodem/xmodem"
+	"github.com/chrizzzzz/go-xmodem/xmodem"
 	"github.com/tarm/serial"
 )
 
@@ -37,7 +37,7 @@ func main() {
 	}
 
 	if *device != "nil" && *firmware != "nil" {
-		upload_firmware(*device, *firmware)
+		uploadFirmware(*device, *firmware)
 	} else {
 		errorLog.Println("Must have device and firmware arguments to run..")
 		infoLog.Println("Program Usage:")
@@ -50,47 +50,39 @@ func main() {
 //
 // Param dev_path: The device path to commmunicate on.
 // Param firmware_path: The location on disk of the firmware that is to be
-//                      installed.
 //------------------------------------------------------------------------------
-func upload_firmware(dev_path, firmware_path string) bool {
+//                      installed.
+func uploadFirmware(devPath, firmwarePath string) bool {
 	debugLog.Println("Reading binary file")
-	data, err := ioutil.ReadFile(firmware_path)
+	data, err := ioutil.ReadFile(firmwarePath)
 
 	check(err)
-	infoLog.Println("Opening", dev_path)
+	infoLog.Println("Opening", devPath)
 
 	// TODO : Upload firmware to multiple devices in goroutines simultaneously
 
 	// TODO : Come to a final decision on baud rate
-	config := &serial.Config{Name: dev_path, Baud: 115200/*9600*/, ReadTimeout: time.Second * 5}
+	config := &serial.Config{Name: devPath, Baud: 115200, ReadTimeout: time.Second * 5}
 
 	debugLog.Println("Opening serial port")
 	port, err := serial.OpenPort(config)
 	check(err)
 
-	debug_log("Sending xmodem request to serial")
+	logDebug("Sending xmodem request to serial")
 	_, err = port.Write([]byte("U"))
 	check(err)
-	//debug_log("Verrifing write")
-	verify_write(port)
-	//read_buff := make([]byte, 10)
-	//n, err := port.Read(read_buff)
-	//check(err)
-	//infoLog.Println(read_buff)
-	//infoLog.Println(n)
-	//check(port.Flush())
+	verifyWrite(port)
 
 	_, err = port.Write([]byte("u"))
-	//check(port.Flush())
 	check(err)
+	verifyWrite(port)
 
-	debug_log("Done sending xmodem request to serial")
+	logDebug("Done sending xmodem request to serial")
 
-	start_time := time.Now()
-	infoLog.Println("Starting XMODEM transfer for", dev_path)
+	startTime := time.Now()
+	infoLog.Println("Starting XMODEM transfer for", devPath)
 	check(xmodem.ModemSend(port, data))
-	verify_write(port)
-	infoLog.Println("Finished XMODEM transfer for", dev_path, "in", time.Since(start_time), "seconds")
+	infoLog.Println("Finished XMODEM transfer for", devPath, "in", time.Since(startTime), "seconds")
 	return true
 }
 
@@ -100,7 +92,7 @@ func upload_firmware(dev_path, firmware_path string) bool {
 //
 // Param text: The text that should output
 //------------------------------------------------------------------------------
-func debug_log(text string) {
+func logDebug(text string) {
 	if debug {
 		debugLog.Println(text)
 	}
@@ -124,10 +116,10 @@ func check(err error) {
 //
 // Param port: The serial port that we should utilize
 //------------------------------------------------------------------------------
-func verify_write(port *serial.Port) {
+func verifyWrite(port *serial.Port) {
 	var err error
-	n, read_buff := 1, make([]byte, 5)
+	n, readBuff := 1, make([]byte, 5)
 	for n > 0 && err != io.EOF {
-		n, err = port.Read(read_buff)
+		n, err = port.Read(readBuff)
 	}
 }
