@@ -53,7 +53,7 @@ func main() {
 //------------------------------------------------------------------------------
 //                      installed.
 func uploadFirmware(devPath, firmwarePath string) bool {
-	debugLog.Println("Reading binary file")
+	logDebug("Reading binary file")
 	data, err := ioutil.ReadFile(firmwarePath)
 
 	check(err)
@@ -64,7 +64,7 @@ func uploadFirmware(devPath, firmwarePath string) bool {
 	// TODO : Come to a final decision on baud rate
 	config := &serial.Config{Name: devPath, Baud: 115200, ReadTimeout: time.Second * 5}
 
-	debugLog.Println("Opening serial port")
+	logDebug("Opening serial port")
 	port, err := serial.OpenPort(config)
 	check(err)
 
