@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/chrizzzzz/go-xmodem/xmodem"
@@ -16,28 +17,34 @@ var errorLog, warningLog, infoLog, debugLog *log.Logger
 var debug bool
 
 func main() {
-	firmware := flag.String("firmware", "nil", "Path to the firmware.")
-	device := flag.String("device", "nil", "Path to the device on which we should commmunicate")
 	verbose := flag.Bool("verbose", false, "Whether to show verbose/debug log or not.")
+	firmware := flag.String("firmware", "nil", "Path to the firmware.")
 	flag.Parse()
-
-	errorLog = log.New(os.Stdout, "ERROR: ", log.Ltime)
-	warningLog = log.New(os.Stdout, "WARNING: ", log.Ltime)
-	infoLog = log.New(os.Stdout, "INFO: ", log.Ltime)
+	devices := flag.Args()
 
 	if *verbose {
-		debugLog = log.New(os.Stdout, "DEBUG: ", log.Ltime)
+		debugLog = log.New(os.Stdout, "DEBUG:", log.Ltime)
 
 		debugLog.Println("Arguments:")
 		debugLog.Println("   Firmware Path:", *firmware)
-		debugLog.Println("   Device Path:", *device)
 		debugLog.Println("   Verbose:", *verbose)
+		debugLog.Println("   Devices:", devices)
 
 		debug = true
 	}
 
-	if *device != "nil" && *firmware != "nil" {
-		uploadFirmware(*device, *firmware)
+	errorLog = log.New(os.Stdout, "ERROR:", log.Ltime)
+	warningLog = log.New(os.Stdout, "WARNING:", log.Ltime)
+	infoLog = log.New(os.Stdout, "INFO:", log.Ltime)
+
+	var wg sync.WaitGroup
+	if len(devices) > 0 && *firmware != "nil" {
+		for _, element := range devices {
+			logDebug("upload firmware for " + element)
+			wg.Add(1)
+			go uploadFirmware(element, *firmware, &wg)
+		}
+		wg.Wait()
 	} else {
 		errorLog.Println("Must have device and firmware arguments to run..")
 		infoLog.Println("Program Usage:")
@@ -50,18 +57,15 @@ func main() {
 //
 // Param dev_path: The device path to commmunicate on.
 // Param firmware_path: The location on disk of the firmware that is to be
-//------------------------------------------------------------------------------
 //                      installed.
-func uploadFirmware(devPath, firmwarePath string) bool {
+//------------------------------------------------------------------------------
+func uploadFirmware(devPath, firmwarePath string, wg *sync.WaitGroup) {
 	logDebug("Reading binary file")
 	data, err := ioutil.ReadFile(firmwarePath)
 
 	check(err)
 	infoLog.Println("Opening", devPath)
 
-	// TODO : Upload firmware to multiple devices in goroutines simultaneously
-
-	// TODO : Come to a final decision on baud rate
 	config := &serial.Config{Name: devPath, Baud: 115200, ReadTimeout: time.Second * 5}
 
 	logDebug("Opening serial port")
@@ -82,8 +86,8 @@ func uploadFirmware(devPath, firmwarePath string) bool {
 	startTime := time.Now()
 	infoLog.Println("Starting XMODEM transfer for", devPath)
 	check(xmodem.ModemSend(port, data))
-	infoLog.Println("Finished XMODEM transfer for", devPath, "in", time.Since(startTime), "seconds")
-	return true
+	infoLog.Println("Finished XMODEM transfer for", devPath, "in", time.Since(startTime))
+	wg.Done()
 }
 
 //------------------------------------------------------------------------------
