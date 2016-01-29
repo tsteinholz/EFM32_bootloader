@@ -40,7 +40,6 @@ func main() {
 	var wg sync.WaitGroup
 	if len(devices) > 0 && *firmware != "nil" {
 		for _, element := range devices {
-			logDebug("upload firmware for " + element)
 			wg.Add(1)
 			go uploadFirmware(element, *firmware, &wg)
 		}
@@ -58,6 +57,8 @@ func main() {
 // Param dev_path: The device path to commmunicate on.
 // Param firmware_path: The location on disk of the firmware that is to be
 //                      installed.
+// Param wg : The waitgroup that is needed to sync the goroutines together with
+//            all the other instances of this function.
 //------------------------------------------------------------------------------
 func uploadFirmware(devPath, firmwarePath string, wg *sync.WaitGroup) {
 	logDebug("Reading binary file")
