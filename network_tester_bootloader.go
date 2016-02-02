@@ -13,7 +13,7 @@ import (
 	"github.com/tarm/serial"
 )
 
-var errorLog, warningLog, infoLog, debugLog *log.Logger
+var errorLog, infoLog, debugLog *log.Logger
 var debug bool
 
 func main() {
@@ -34,7 +34,6 @@ func main() {
 	}
 
 	errorLog = log.New(os.Stdout, "ERROR:", log.Ltime)
-	warningLog = log.New(os.Stdout, "WARNING:", log.Ltime)
 	infoLog = log.New(os.Stdout, "INFO:", log.Ltime)
 
 	var wg sync.WaitGroup
@@ -45,7 +44,10 @@ func main() {
 		}
 		wg.Wait()
 	} else {
-		errorLog.Println("Must have device and firmware arguments to run..")
+		errorLog.Println("Must have device and firmware arguments to run...")
+		infoLog.Println("You must enumerate all of the devices you want to communicate")
+		infoLog.Println("with after you specify the firmware and if you want verbose or not")
+		infoLog.Println("ex: 'EFM32_bootloader -firmware nt.bin /dev/ttyUSB2 /dev/ttyUSB5''")
 		infoLog.Println("Program Usage:")
 		flag.PrintDefaults()
 	}
